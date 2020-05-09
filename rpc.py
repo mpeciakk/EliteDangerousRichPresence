@@ -5,13 +5,6 @@ import glob
 import json
 from config import LOGS_PATH, CLIENT_ID, DISPLAYED_RANK, RANKS
 
-
-def get_latest_log():
-    files = {filename: filename.split(
-        '.')[1] for filename in glob.glob(LOGS_PATH + '/Journal.*.log')}
-    return max(files, key=lambda key: files[key])
-
-
 class RPClient:
     def __init__(self):
         self.commander = ''
@@ -28,6 +21,11 @@ class RPClient:
 
         self.RPC = Presence(CLIENT_ID, pipe=0)
         self.RPC.connect()
+
+    def get_latest_log(self):
+        files = {filename: filename.split(
+            '.')[1] for filename in glob.glob(LOGS_PATH + '/Journal.*.log')}
+        return max(files, key=lambda key: files[key])
 
     def parse(self, line):
         data = json.loads(line)
@@ -66,16 +64,18 @@ class RPClient:
         if event == 'LeaveBody':
             self.near_planet = False
         if event == 'Shutdown':
-            self.shutdown
+            self.shutdown = True
 
     def parse_all(self):
-        file = open(get_latest_log(), 'r', encoding='utf8')
+        file = open(self.get_latest_log(), 'r', encoding='utf8')
         lines = file.readlines()
 
         for line in lines:
             self.parse(line)
 
     def start(self):
+        print('Loading {}..'.format(self.get_latest_log()))
+
         self.parse_all()
 
         print('Your presence is working!')
@@ -104,10 +104,11 @@ class RPClient:
             self.RPC.update(state=state, details=details, large_image=large_image,
                             large_text=large_text, small_image=small_image, small_text=small_text)
 
-        watcher = Watcher(get_latest_log(), change)
+        watcher = Watcher(self.get_latest_log(), change)
         watcher.watch()
 
         while True:
-            if (self.shutdown == True):
+            if (self.shutdown):
+                print('Game logs ended, disabling RichPresence..')
                 break
             time.sleep(1)

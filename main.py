@@ -6,12 +6,15 @@ from config import LOGS_PATH
 import asyncio
 
 def start_client():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
     print("New game logs detected, launching RichPresence...")
 
     client = RPClient()
     client.start()
 
-async def start_watcher():
+if __name__ == "__main__":
     event_handler = PatternMatchingEventHandler("*", "", False, False)
 
     def on_created(event):
@@ -24,7 +27,4 @@ async def start_watcher():
     observer.start()
 
     while True:
-        await asyncio.sleep(1)
-
-if __name__ == "__main__":
-    asyncio.get_event_loop().run_until_complete(start_watcher())
+       time.sleep(1)
