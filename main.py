@@ -1,25 +1,30 @@
-from rpc import RPClient
-import time
+from presence import PresenceClient
+from time import sleep
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 from config import LOGS_PATH
-import asyncio
+from asyncio import new_event_loop, set_event_loop
+from os import listdir
+
 
 def start_client():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    loop = new_event_loop()
+    set_event_loop(loop)
 
-    print("New game logs detected, launching RichPresence...")
+    print("Game logs detected, launching presence client..")
 
-    client = RPClient()
+    client = PresenceClient()
     client.start()
 
+
 if __name__ == "__main__":
-    event_handler = PatternMatchingEventHandler("*", "", False, False)
+    if len(listdir(LOGS_PATH)) != 0:
+        start_client()
 
     def on_created(event):
         start_client()
 
+    event_handler = PatternMatchingEventHandler("*", "", False, False)
     event_handler.on_created = on_created
 
     observer = Observer()
@@ -27,4 +32,4 @@ if __name__ == "__main__":
     observer.start()
 
     while True:
-       time.sleep(1)
+        sleep(1)

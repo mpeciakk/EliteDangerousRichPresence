@@ -1,9 +1,10 @@
 LOGS_PATH = '/home/maciek/Games/SteamLibrary/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Saved Games/Frontier Developments/Elite Dangerous/'
-CLIENT_ID = '706194586405437500'
 DISPLAYED_RANK = 'explore'
+
+# Don't change this unless you know what you are doing
+CLIENT_ID = '706194586405437500'
 RANKS = {
     'explore': [
-        'None',
         'Aimless',
         'Mostly Aimless',
         'Scout',
@@ -15,7 +16,6 @@ RANKS = {
         'Elite'
     ],
     'combat': [
-        'None',
         'Harmless',
         'Mostly Harmless',
         'Novice',
@@ -27,7 +27,6 @@ RANKS = {
         'Elite'
     ],
     'trade': [
-        'None',
         'Penniless',
         'Mostly Penniless',
         'Peddler',
@@ -39,7 +38,6 @@ RANKS = {
         'Elite'
     ],
     'cqc': [
-        'None',
         'Helpless',
         'Mostly Helpless',
         'Amateur',

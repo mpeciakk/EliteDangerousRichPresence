@@ -1,11 +1,12 @@
 from watcher import Watcher
 from pypresence.presence import Presence
-import time
-import glob
-import json
+from time import sleep
+from glob import glob
 from config import LOGS_PATH, CLIENT_ID, DISPLAYED_RANK, RANKS
+import json
 
-class RPClient:
+# Yeah, maybe it's shitty code
+class PresenceClient:
     def __init__(self):
         self.commander = ''
         self.ship = 'none'
@@ -16,15 +17,15 @@ class RPClient:
         self.near_planet = False
         self.landed = False
         self.srv = False
-        self.rank = 0
         self.shutdown = False
+        self.rank = 0
 
-        self.RPC = Presence(CLIENT_ID, pipe=0)
-        self.RPC.connect()
+        self.presence = Presence(CLIENT_ID)
+        self.presence.connect()
 
     def get_latest_log(self):
         files = {filename: filename.split(
-            '.')[1] for filename in glob.glob(LOGS_PATH + '/Journal.*.log')}
+            '.')[1] for filename in glob(LOGS_PATH + '/Journal.*.log')}
         return max(files, key=lambda key: files[key])
 
     def parse(self, line):
@@ -75,9 +76,6 @@ class RPClient:
 
     def start(self):
         print('Loading {}..'.format(self.get_latest_log()))
-
-        self.parse_all()
-
         print('Your presence is working!')
 
         def change():
@@ -101,14 +99,16 @@ class RPClient:
             large_text = 'Commander ' + self.commander
             small_image = DISPLAYED_RANK.lower() + '-' + str(self.rank)
             small_text = RANKS[DISPLAYED_RANK.lower()][self.rank]
-            self.RPC.update(state=state, details=details, large_image=large_image,
-                            large_text=large_text, small_image=small_image, small_text=small_text)
+            self.presence.update(state=state, details=details, large_image=large_image,
+                                 large_text=large_text, small_image=small_image, small_text=small_text)
 
         watcher = Watcher(self.get_latest_log(), change)
-        watcher.watch()
 
         while True:
             if (self.shutdown):
-                print('Game logs ended, disabling RichPresence..')
+                self.presence.close()
+                print('Waiting for game to be played..')
                 break
-            time.sleep(1)
+
+            watcher.look()
+            sleep(1)
