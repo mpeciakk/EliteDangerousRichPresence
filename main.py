@@ -16,16 +16,19 @@ def start_client():
     client = PresenceClient()
     client.start()
 
+    print("Log file closed..");
+
+    loop.close()
 
 if __name__ == "__main__":
     if len(listdir(LOGS_PATH)) != 0:
         start_client()
 
-    def on_created(event):
+    def on_file_created(event):
         start_client()
 
     event_handler = PatternMatchingEventHandler("*", "", False, False)
-    event_handler.on_created = on_created
+    event_handler.on_created = on_file_created
 
     observer = Observer()
     observer.schedule(event_handler, LOGS_PATH, recursive=True)

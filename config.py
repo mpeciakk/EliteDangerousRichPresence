@@ -1,8 +1,9 @@
-LOGS_PATH = '/home/maciek/Games/SteamLibrary/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Saved Games/Frontier Developments/Elite Dangerous/'
+LOGS_PATH = 'C:\\Users\\maciek\\Saved Games\\Frontier Developments\\Elite Dangerous'
+
 DISPLAYED_RANK = 'explore'
 
 # Don't change this unless you know what you are doing
-CLIENT_ID = '706194586405437500'
+CLIENT_ID = '824656009599123496'
 RANKS = {
     'explore': [
         'Aimless',

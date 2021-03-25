@@ -5,7 +5,6 @@ from glob import glob
 from config import LOGS_PATH, CLIENT_ID, DISPLAYED_RANK, RANKS
 import json
 
-# Yeah, maybe it's shitty code
 class PresenceClient:
     def __init__(self):
         self.commander = ''
@@ -13,12 +12,14 @@ class PresenceClient:
         self.system = 'none'
         self.body = 'none'
         self.docked = ''
+        self.docked_station_type = ''
         self.fsd_destination = ''
+        self.rank = 0
+
         self.near_planet = False
         self.landed = False
         self.srv = False
         self.shutdown = False
-        self.rank = 0
 
         self.presence = Presence(CLIENT_ID)
         self.presence.connect()
@@ -39,6 +40,7 @@ class PresenceClient:
             self.system = data['StarSystem']
         if event == 'Docked':
             self.docked = data['StationName']
+            self.docked_station_type = data['StationType']
         if event == 'Undocked':
             self.docked = ''
         if event == 'FSDJump':
@@ -51,6 +53,8 @@ class PresenceClient:
             self.rank = data[DISPLAYED_RANK.title()]
         if event == 'StartJump' and data['JumpType'] == 'Hyperspace':
             self.fsd_destination = data['StarSystem']
+        if event == 'ShipyardSwap':
+            self.ship = data['ShipType_Localised']
         if event == 'ApproachBody':
             self.near_planet = True
             self.body = data['Body']
@@ -67,6 +71,34 @@ class PresenceClient:
         if event == 'Shutdown':
             self.shutdown = True
 
+    def update_state(self):
+        large_image = '-'.join(self.ship.lower().split(' '))
+        large_text = f'Commander {self.commander}'
+        small_image = f'rank-{self.rank}-{DISPLAYED_RANK.lower()}'
+        small_text = RANKS[DISPLAYED_RANK.lower()][self.rank]
+
+        state = f'In {self.ship}'
+
+        if self.docked != '':
+            details = f'Docked at {self.docked} in {self.system}'
+            large_image = self.docked_station_type.lower()
+            small_text = f'In {self.ship}'
+            small_image = '-'.join(self.ship.lower().split(' '))
+        elif self.fsd_destination != '':
+            details = f'Jumping to {self.fsd_destination}'
+        elif self.srv:
+            state = 'In SRV'
+            details = f'Exploring {self.body} in {self.system}'
+        elif self.landed:
+            details = f'Landed on {self.body} in {self.system}' 
+        elif self.near_planet:
+            details = f'Near {self.body} in {self.system}'
+        else:
+            details = f'Exploring {self.system}'
+        
+        self.presence.update(state=state, details=details, large_image=large_image,
+                                 large_text=large_text, small_image=small_image, small_text=small_text)
+
     def parse_all(self):
         file = open(self.get_latest_log(), 'r', encoding='utf8')
         lines = file.readlines()
@@ -75,32 +107,12 @@ class PresenceClient:
             self.parse(line)
 
     def start(self):
-        print('Loading {}..'.format(self.get_latest_log()))
+        print(f'Loading {self.get_latest_log()}')
         print('Your presence is working!')
 
         def change():
             self.parse_all()
-            state = 'In ' + self.ship
-
-            if self.docked != '':
-                details = "Docked at " + self.docked
-            elif self.fsd_destination != '':
-                details = 'Jumping to ' + self.fsd_destination
-            elif self.srv:
-                details = 'In SRV on ' + self.body
-            elif self.landed:
-                details = 'Landed on ' + self.body
-            elif self.near_planet:
-                details = 'Near ' + self.body
-            else:
-                details = "Exploring " + self.system
-
-            large_image = self.ship.lower().replace(' ', '-')
-            large_text = 'Commander ' + self.commander
-            small_image = DISPLAYED_RANK.lower() + '-' + str(self.rank)
-            small_text = RANKS[DISPLAYED_RANK.lower()][self.rank]
-            self.presence.update(state=state, details=details, large_image=large_image,
-                                 large_text=large_text, small_image=small_image, small_text=small_text)
+            self.update_state()
 
         watcher = Watcher(self.get_latest_log(), change)
 
